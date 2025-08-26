@@ -9,17 +9,20 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors({
+app.use(
+  cors({
     credentials: true,
-    origin: "http://localhost:5173",
-}));
+    origin: ["http://localhost:5173", "https://authflow-frontend-vxpt.onrender.com"],
+    
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 
 // Routes
 app.get("/", (req, res) => {
-    res.send("Hello World!");
+  res.send("Hello World!");
 });
 
 // Connect to MongoDB
@@ -28,5 +31,5 @@ connectDB();
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

@@ -13,10 +13,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { AppContext, useAppContext } from "../context/AppContext";
-import axios from "axios";
+import {api} from "../context/AppContext";
+import { toast } from "react-hot-toast";
 
 const Login = () => {
-  const { backendUrl, setIsLoggedIn, getUserData } = useAppContext(AppContext);
+  const { setIsLoggedIn, getUserData } = useAppContext(AppContext);
   const {
     register,
     handleSubmit,
@@ -29,24 +30,18 @@ const Login = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      const response = await axios.post(`${backendUrl}/auth/login`, data, {
-        withCredentials: true,
-      });
-      console.log(response);
+      const response = await api.post("/api/auth/login", data);
 
       if (response.status === 200) {
-        setTimeout(async () => {
-          await getUserData();
-          setIsLoggedIn(true);
-          navigate("/");
-        }, 100);
+        await getUserData();
+        toast.success("Login successful!");
+        navigate("/");
       }
     } catch (error) {
-      console.error(
-        "Login error:",
-        error.response?.data?.message || error.message
+      console.error("Login error:", error);
+      toast.error(
+        error.response?.data?.message || "Login failed. Please try again."
       );
-      // Handle login error (show error message to user)
     } finally {
       setIsLoading(false);
     }

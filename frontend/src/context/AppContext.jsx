@@ -1,6 +1,15 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
-axios.defaults.withCredentials = true;
+
+// Configure axios defaults
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000",
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 export const AppContext = createContext();
 
 export const useAppContext = () => {
@@ -8,7 +17,6 @@ export const useAppContext = () => {
 };
 
 export const AppContextProvider = (props) => {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,9 +24,7 @@ export const AppContextProvider = (props) => {
   const getUserData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${backendUrl}/auth/get-user-data`, {
-        withCredentials: true,
-      });
+      const response = await api.get("/api/auth/get-user-data");
 
       if (response.data.success) {
         setIsLoggedIn(true);
@@ -41,13 +47,7 @@ export const AppContextProvider = (props) => {
 
   const logout = async () => {
     try {
-      const response = await axios.post(
-        `${backendUrl}/auth/logout`,
-        {},
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await api.post("/api/auth/logout", {});
 
       if (response.data.success) {
         setIsLoggedIn(false);
@@ -59,7 +59,6 @@ export const AppContextProvider = (props) => {
   };
 
   const value = {
-    backendUrl,
     isLoggedIn,
     setIsLoggedIn,
     userData,
