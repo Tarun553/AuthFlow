@@ -130,9 +130,11 @@ export const login = async (req, res) => {
     // Set the token in HTTP-only cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production", // true in production
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      domain:
+        process.env.NODE_ENV === "production" ? ".onrender.com" : undefined,
     });
 
     res.status(200).json({
@@ -310,12 +312,10 @@ export const resetPassword = async (req, res) => {
   try {
     const { email, otp, password } = req.body;
     if (!email || !otp || !password) {
-      return res
-        .status(400)
-        .json({
-          message: "Please provide email,otp and password",
-          success: false,
-        });
+      return res.status(400).json({
+        message: "Please provide email,otp and password",
+        success: false,
+      });
     }
     const user = await User.findOne({ email });
     if (!user) {
@@ -380,13 +380,11 @@ export const getUserData = async (req, res) => {
         .json({ message: "User not found", success: false });
     }
     console.log(user);
-    res
-      .status(200)
-      .json({
-        message: "User data fetched successfully",
-        success: true,
-        data: user,
-      });
+    res.status(200).json({
+      message: "User data fetched successfully",
+      success: true,
+      data: user,
+    });
   } catch (error) {
     console.error("Error in getUserData:", error);
     res.status(500).json({ message: "Internal server error", success: false });
