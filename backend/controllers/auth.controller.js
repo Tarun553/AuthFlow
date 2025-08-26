@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 import transporter from "../config/nodemail.js";
+import { cookieOptions } from "../config/cookieOptions.js";
 
 export const register = async (req, res) => {
   try {
@@ -28,12 +29,7 @@ export const register = async (req, res) => {
       expiresIn: "1d",
     });
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+    res.cookie("token", token, cookieOptions);
 
     // Send email using Brevo
     try {
@@ -128,12 +124,7 @@ export const login = async (req, res) => {
     });
 
     // Set the token in HTTP-only cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // true in production
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie("token", token, cookieOptions);
 
     res.status(200).json({
       message: "User logged in successfully",
@@ -147,11 +138,7 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "none",
-    });
+    res.clearCookie("token", cookieOptions);
     res.status(200).json({ message: "User logged out successfully" });
   } catch (error) {
     console.log(error);
