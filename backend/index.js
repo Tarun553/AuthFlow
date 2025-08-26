@@ -8,20 +8,28 @@ import cors from "cors";
 
 const app = express();
 
+const AllowedOrigins = process.env.ALLOWED_ORIGINS?.split(",");
+
 // Middleware
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://taupe-sprite-21986e.netlify.app",
-    ],
+    origin: function (origin, cb) {
+      console.log("origin ==> ", origin);
+      if (AllowedOrigins && AllowedOrigins.indexOf(origin) !== -1) {
+        cb(null, origin);
+      } else {
+        cb(new Error("Not Allowed by CORS"), false);
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 app.use(express.json());
 app.use(cookieParser());
+
 app.use("/api/auth", authRoutes);
 
 // Routes

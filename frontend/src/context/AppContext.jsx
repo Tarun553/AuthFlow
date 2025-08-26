@@ -1,31 +1,48 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
-
-// Configure axios defaults
-export const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL,
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
-});
+import axiosInstance from "../services/api";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export const AppContext = createContext();
-
-export const useAppContext = () => {
-  return useContext(AppContext);
-};
 
 export const AppContextProvider = (props) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
+
+  const login = async (data) => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.post("/api/auth/login", data);
+
+      if (response.data.success) {
+        setIsLoggedIn(true);
+        setUserData(response.data.data);
+
+        toast.success("Login successful!");
+        navigate("/");
+      } else {
+        setIsLoggedIn(false);
+        setUserData(null);
+      }
+    } catch (error) {
+      console.error(
+        "Error logging in:",
+        error.response?.data?.message || error.message
+      );
+      setIsLoggedIn(false);
+      setUserData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getUserData = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/api/auth/get-user-data");
+      const response = await axiosInstance.get("/api/auth/get-user-data");
 
       if (response.data.success) {
         setIsLoggedIn(true);
@@ -47,8 +64,9 @@ export const AppContextProvider = (props) => {
   };
 
   const logout = async () => {
+    setLoading(true);
     try {
-      const response = await api.post("/api/auth/logout", {});
+      const response = await axiosInstance.post("/api/auth/logout", {});
 
       if (response.data.success) {
         setIsLoggedIn(false);
@@ -56,8 +74,16 @@ export const AppContextProvider = (props) => {
       }
     } catch (error) {
       console.error("Error logging out:", error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      getUserData();
+    }
+  }, [isLoggedIn]);
 
   const value = {
     isLoggedIn,
@@ -68,9 +94,14 @@ export const AppContextProvider = (props) => {
     logout,
     loading,
     setLoading,
+    login,
   };
 
   return (
     <AppContext.Provider value={value}>{props.children}</AppContext.Provider>
   );
+};
+
+export const useAppContext = () => {
+  return useContext(AppContext);
 };

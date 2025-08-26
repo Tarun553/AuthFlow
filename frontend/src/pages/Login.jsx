@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,38 +12,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { AppContext, useAppContext } from "../context/AppContext";
-import {api} from "../context/AppContext";
-import { toast } from "react-hot-toast";
 
 const Login = () => {
-  const { setIsLoggedIn, getUserData } = useAppContext(AppContext);
+  const { loading: isLoading, login } = useAppContext(AppContext);
+  console.log(isLoading);
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const navigate = useNavigate();
+  } = useForm({
+    defaultValues: { email: "kamal@gmail.com", password: "kamal123" },
+  });
 
   const onSubmit = async (data) => {
-    setIsLoading(true);
-    try {
-      const response = await api.post("/api/auth/login", data);
-
-      if (response.status === 200) {
-        await getUserData();
-        toast.success("Login successful!");
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      toast.error(
-        error.response?.data?.message || "Login failed. Please try again."
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    await login(data);
   };
 
   return (
